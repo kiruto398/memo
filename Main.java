@@ -89,6 +89,8 @@ public class Main {
 	}
 
 	private static int putNxN(int n, int i, int j, int bits, int N) {
+		//bit列にN×Nのタイルを置く
+
 		for(int k = 1; k < n*n; k++) {
 			int d = k/n * (N-n) + k;
 
@@ -101,6 +103,8 @@ public class Main {
 	}
 
 	private static boolean isNxNok(int n, int i, int j, int bits, int N) {
+		//N×Nのマスを置けるか判定する
+
 		if(N-i < n || N-j < n)
 			return false;
 
