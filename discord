@@ -1,126 +1,96 @@
-const http = require('http');
-const querystring = require('querystring');
-const discord = require('discord.js');
-const client = new discord.Client();
+import discord
+import re
+import random
 
-http.createServer(function(req, res){
- if (req.method == 'POST'){
-   var data = "";
-   req.on('data', function(chunk){
-     data += chunk;
-   });
-   req.on('end', function(){
-     if(!data){
-        console.log("No post data");
-        res.end();
-        return;
-     }
-     var dataObject = querystring.parse(data);
-     console.log("post:" + dataObject.type);
-     if(dataObject.type == "wake"){
-       console.log("Woke up in post");
-       res.end();
-       return;
-     }
-     res.end();
-   });
- }
- else if (req.method == 'GET'){
-   res.writeHead(200, {'Content-Type': 'text/plain'});
-   res.end('Discord Bot is active now\n');
- }
-}).listen(3000);
+# 接続に必要なオブジェクトを生成
+client = discord.Client()
 
-client.on('ready', message =>{
- console.log('Bot準備完了～');
- client.user.setPresence({ activity: { name: 'にゃ～ん' } });
-});
+# 起動時に動作する処理
+@client.event
+async def on_ready():
+    # 起動したらターミナルにログイン通知が表示される
+    print('ログインしました')
+
+# メッセージ受信時に動作する処理
+@client.event
+async def on_message(message):
+    # メッセージ送信者がBotだった場合は無視する
+    if message.author.bot:
+        return
+    #テスト環境-きると以外は無視する
+    if message.channel.id != 890628318389477388:
+        return
+
+    txt = message.content
+
+    # 「/neko」と発言したら「にゃーん」が返る処理
+    if txt == '/neko':
+        await message.channel.send('にゃーん')
+        
+    # /NdM : M面ダイスをN個投げる
+    if re.fullmatch('/(1[0-9]|[1-9])(d|D)([1-9][0-9]?|100)', txt) != None:
+        nm = re.findall('\d+', txt)
+        ret = NdM(int(nm[0]), int(nm[1]))
+
+        await message.channel.send(ret)
+
+    #メッセージを消す
+    if re.fullmatch('/delete message ([1-9][0-9]?|100)', txt):
+        n = int(re.findall('\d+', txt)[0])
+        await message.channel.purge(limit=n+1)
 
 
 
-client.on('message', message =>{
- 
-  if (message.author.bot){
-    return;
-  }
-  
- if (message.content.match(/にゃ～ん|にゃーん/)){
-   let text = "にゃ～ん";
-   message.channel.send(text);
-   return;
- }
-  
-  
-  if (!message.content.match(/^(!|！)/)){
-  return;
-}
-  if(message.content.match(/^(!|！)$/)){
-    return;
-  }
-  
-var thisMessage = message.content.replace(/　/g, ' ').substr(1);
-  
-  if(thisMessage.match(/^(1[0-9]|[1-9])(d|D)([1-9][0-9]?|100)$/)){
-    var num = thisMessage.match(/[1-9][0-9]*/g);
-    
-    var arr = nDn(num[0], num[1]);
-    var sum = arr.shift();
-    
-    var text = "" + sum + " = [" + arr.join(", ") + "]";
-    message.channel.send(text);
-    
-    return;
-  }
-  
-  if(thisMessage.match(/^(1[0-9]|[1-9])(d|D)([1-9][0-9]?|100) ([1-9][0-9]?|100)$/)){
-    var num = thisMessage.match(/[1-9][0-9]*/g);
-    var arr = nDn(num[0], num[1]);
-    var sum = arr.shift();
-    
-    var text;
-    if(sum <= num[2]){
-      text = "success";
-    }else{
-      text = "failure";
-    }
-    
-    if(num[0] * num[1] == 100){
-      if(sum <= 5){
-        text = "critical!";
-      }else if(sum >= 95){
-        text = "fumble!";
-      }
-    }
-    
-    message.channel.send(num[2] + " : " + sum + " = [" + arr.join(", ") + "]");
-    message.channel.send(text);
-    return;
-  }
-  
-  
-  
-  
-});
+def NdM(n, m):
+    sum = 0
+    list = '['
 
-function nDn(n, lim){
-  var ret = [0];
-  
-  var sum = 0;
-  for(let i = 0; i < n; i++){
-    var rnd = Math.floor( Math.random()*lim)+1;
-    
-    sum += rnd;
-    ret.push(rnd);
-  }
-  
-  ret[0] = sum;
-  return ret;
-  
-}
+    sum += random.randint(1, m)
+    list += str(sum)
+    for i in range(n-1):
+        d = random.randint(1, m)
+        sum += d
+        list += ', ' + str(d)
 
-if(process.env.DISCORD_BOT_TOKEN == undefined){
-console.log('DISCORD_BOT_TOKENが設定されていません。');
-process.exit(0);
-}
+    list += ']'
 
-client.login( process.env.DISCORD_BOT_TOKEN );
+    return '' + str(sum) + ' = ' + list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TOKEN = 'トークンid'
+client.run(TOKEN)
