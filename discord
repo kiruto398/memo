@@ -26,21 +26,26 @@ async def on_message(message):
     # 「/neko」と発言したら「にゃーん」が返る処理
     if txt == '/neko':
         await message.channel.send('にゃーん')
-        
+
     # /NdM : M面ダイスをN個投げる
-    if re.fullmatch('/(1[0-9]|[1-9])(d|D)([1-9][0-9]?|100)', txt) != None:
+    if re.fullmatch('/(1[0-9]|[1-9])(d|D)([1-9][0-9]?|100)', txt):
         nm = re.findall('\d+', txt)
         ret = NdM(int(nm[0]), int(nm[1]))
 
         await message.channel.send(ret)
 
-    #メッセージを消す
+    # /delete message N : メッセージを消す
     if re.fullmatch('/delete message ([1-9][0-9]?|100)', txt):
         n = int(re.findall('\d+', txt)[0])
         await message.channel.purge(limit=n+1)
 
+    if message.attachments:
+        predicted = predicteImage(message.attachments[0].url)
+
+        await message.channel.send(str(predicted))
 
 
+# return String'sum = [個別のダイス]'
 def NdM(n, m):
     sum = 0
     list = '['
@@ -57,40 +62,60 @@ def NdM(n, m):
     return '' + str(sum) + ' = ' + list
 
 
+import requests
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import tempfile
+# return predict(image)
+def predicteImage(url):
+
+    image = getImage(url)
+    image = cv2.resize(image,(8,8))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image = 15 - image // 16
+    plt.imshow(image)
+    plt.show()
+    image = image.reshape((-1,64))
+
+
+    predicted = model.predict(image)
+    return predicted
+
+def getImage(url):
+    print(url)
+    res = requests.get(url)
+    img = None
+    # Tempfileを作成して即読み込む
+    fp = tempfile.NamedTemporaryFile(delete=False)
+    fp.write(res.content)
+    fp.close()
+    img = cv2.imread(fp.name)
+    return img
+
+#機械学習
+from sklearn import datasets
+
+digits = datasets.load_digits()
+
+num_samples = len(digits.images)
+data = digits.images.reshape((num_samples, -1))
+
+import sklearn.svm as svm
+model = svm.SVC(gamma=0.001, C=100)
+
+v = int(num_samples/1.5)
+
+train_features=data[:v]
+train_teacher_labels=digits.target[:v]
+
+test_feature=data[v:]
+test_teacher_labels=digits.target[v:]
+
+model.fit(train_features, train_teacher_labels)
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-TOKEN = 'トークンid'
+TOKEN = 'botトークン'
 client.run(TOKEN)
