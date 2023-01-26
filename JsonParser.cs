@@ -35,7 +35,7 @@ class Parser{
         return ret;
     }
 
-    public string Dic2Str(Dictionary<string, object> dic){
+    private string Dic2Str(Dictionary<string, object> dic){
         StringBuilder sb = new StringBuilder();
 
         bool first = true;
@@ -52,7 +52,7 @@ class Parser{
         return sb.ToString();
     }
 
-    public string List2Str(List<object> list){
+    private string List2Str(List<object> list){
         StringBuilder sb = new StringBuilder();
 
         bool first = true;
